@@ -177,11 +177,14 @@ NOTES:
  *   Rating: 1
  */
 int bitXor(int x, int y) {
+  //op1 and op2 comprise of all bits which xor is true,
+  //then demorgans law is used to provide a functional equivalent
+  //of OR to produce a combined result
   int op1 = x&(~y);//2
   int op2 = y&(~x);//4
   op1 = ~op1;//5
   op2 = ~op2;//6
-  return ~(op1&op2)//7 demorgan
+  return ~(op1&op2);//7 demorgan
 }
 /* 
  * bitMatch - Create mask indicating which bits in x match those in y
@@ -192,7 +195,11 @@ int bitXor(int x, int y) {
  *   Rating: 1
  */
 int bitMatch(int x, int y) {
-  return 2;
+  //matchOnes/Zeroes find bits that match
+  //then apply demorgans to combine with functional equivalent of OR
+  int matchOnes = x & y;
+  int matchZeroes = ~x & ~y;
+  return ~(~matchZeroes&~matchOnes);
 }
 /* 
  * allOddBits - return 1 if all odd-numbered bits in word set to 1
@@ -203,7 +210,10 @@ int bitMatch(int x, int y) {
  *   Rating: 2
  */
 int allOddBits(int x) {
-  return 2;
+  //Use oddOnes as mask, compare with oddOnes using xor
+  //If any dont match, return false, else true
+  int oddOnes = 0xAAAAAAAA;
+  return !((x & oddOnes) ^ oddOnes);
 }
 /* 
  * byteSwap - swaps the nth byte and the mth byte
@@ -215,7 +225,19 @@ int allOddBits(int x) {
  *  Rating: 2
  */
 int byteSwap(int x, int n, int m) {
-    return 2;
+  //Finds the two bytes, seperates them, clears the two byte slots in x,
+  //combines bytes to be swapped and cleared x
+    int mshamt = m <<3;
+    int nshamt = n << 3;
+    int byteOneMask = 0x000000FF << nshamt;
+    int byteTwoMask = 0x000000FF << mshamt;
+    int bytesMask = byteOneMask | byteTwoMask;
+    int byteOne = x & byteOneMask; 
+    int byteTwo = x & byteTwoMask; 
+    int clearedX = x & ~bytesMask;
+    int byteOneInPosition = ((byteOne >> nshamt) << mshamt) & byteTwoMask;
+    int byteTwoInPosition = ((byteTwo >> mshamt) << nshamt) & byteOneMask;
+    return byteOneInPosition | byteTwoInPosition | clearedX;
 }
 /* 
  * isGreater - if x > y  then return 1, else return 0 
@@ -225,7 +247,17 @@ int byteSwap(int x, int n, int m) {
  *   Rating: 3
  */
 int isGreater(int x, int y) {
-  return 2;
+  //Convert Y to two's complement negative
+  //subtract
+  //if positive x > y
+  //but if overflow possible (i.e. opposing signs)
+  //just check which if x is negative
+  int negativeYVal = ~y + 1;
+  int sum = negativeYVal + x;
+  int sumRes = !(sum >> 31);//1 if x > y
+  int diffSigns = ((x >> 31) ^ (y >> 31)) & 0x00000001;
+  int overflowResult = diffSigns & (y >> 31); //if y < 0 return true
+  return ((overflowResult | (sumRes & !diffSigns)) & !(!(sum)));
 }
 /* 
  * isAsciiDigit - return 1 if 0x30 <= x <= 0x39 (ASCII codes for characters '0' to '9')
@@ -237,7 +269,11 @@ int isGreater(int x, int y) {
  *   Rating: 3
  */
 int isAsciiDigit(int x) {
-  return 2;
+  int twosCompX = ~x + 1;
+  int twosCompTop = ~0x3A + 1;
+  int aboveBottomRange = ((0x2F + twosCompX) >>31 ) & 1; //1 if above range
+  int belowTopRange = ((x + twosCompTop) >> 31) & 1;
+  return aboveBottomRange & belowTopRange;
 }
 /*
  * bitParity - returns 1 if x contains an odd number of 0's
@@ -247,7 +283,13 @@ int isAsciiDigit(int x) {
  *   Rating: 4
  */
 int bitParity(int x) {
-  return 2;
+  //Perform xor reduction
+  int toSixteen = (x >> 16) ^ x;//2
+  int toEight = (toSixteen >> 8) ^ toSixteen;//4
+  int toFour = (toEight >> 4) ^ toEight;//6
+  int toTwo = (toFour >> 2) ^ toFour;//8
+  int toOne = (toTwo >> 1) ^ toTwo;
+  return toOne & 1;
 }
 /*
  * isTmin - returns 1 if x is the minimum, two's complement number,
@@ -257,7 +299,9 @@ int bitParity(int x) {
  *   Rating: 1
  */
 int isTmin(int x) {
-  return 2;
+  //Checks negative number w/ no positives
+  int allZRight = ! (x & 0x7FFFFFFF);
+  return ((x >> 31) & 1) & allZRight;
 }
 /* 
  * fitsBits - return 1 if x can be represented as an 
@@ -269,7 +313,7 @@ int isTmin(int x) {
  *   Rating: 2
  */
 int fitsBits(int x, int n) {
-  return 2;
+ 
 }
 /* 
  * twosComp2SignMag - Convert from two's complement to sign-magnitude 
