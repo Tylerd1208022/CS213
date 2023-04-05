@@ -313,7 +313,7 @@ int isTmin(int x) {
  *   Rating: 2
  */
 int fitsBits(int x, int n) {
- 
+ return;
 }
 /* 
  * twosComp2SignMag - Convert from two's complement to sign-magnitude 
@@ -325,7 +325,10 @@ int fitsBits(int x, int n) {
  *   Rating: 4
  */
 int twosComp2SignMag(int x) {
-  return 2;
+  int inverted = ~x + 1;
+  int isPositive = (!(x & 0x80000000)) << 31;
+  int negOutput = inverted | 0x80000000;
+  return ((isPositive >> 31) & x) | (~(isPositive >> 31) & negOutput);
 }
 /* 
  * floatIsEqual - Compute f == g for floating point arguments f and g.
