@@ -313,7 +313,12 @@ int isTmin(int x) {
  *   Rating: 2
  */
 int fitsBits(int x, int n) {
- return;
+  //Check that the signs match after shifting and that no remainder exists
+  int shiftedRes = x >> (n + 0xFFFFFFFF);
+  int signsMatch = !(!(x & 0x80000000) ^ !(shiftedRes & 1));//True if signs match (can fit)
+  int noRemainderVar = (shiftedRes & 0xfffffffe);//Check remaining bits
+  int noRemainder = (!noRemainderVar | !(~noRemainderVar + 0xFFFFFFFF));//Only true for all 0 left or all F
+  return noRemainder & signsMatch;
 }
 /* 
  * twosComp2SignMag - Convert from two's complement to sign-magnitude 
@@ -325,6 +330,8 @@ int fitsBits(int x, int n) {
  *   Rating: 4
  */
 int twosComp2SignMag(int x) {
+  //If positive, stays the same
+  //else, invert sign, or with 0x80000000
   int inverted = ~x + 1;
   int isPositive = (!(x & 0x80000000)) << 31;
   int negOutput = inverted | 0x80000000;
