@@ -212,7 +212,11 @@ int bitMatch(int x, int y) {
 int allOddBits(int x) {
   //Use oddOnes as mask, compare with oddOnes using xor
   //If any dont match, return false, else true
-  int oddOnes = 0xAAAAAAAA;
+  int oddOnes = 0xaa;
+  oddOnes = (oddOnes << 8) | 0xaa;
+  oddOnes = (oddOnes << 8) | 0xaa;
+  oddOnes = (oddOnes << 8) | 0xaa;
+  //return oddOnes;
   return !((x & oddOnes) ^ oddOnes);
 }
 /* 
@@ -299,9 +303,8 @@ int bitParity(int x) {
  *   Rating: 1
  */
 int isTmin(int x) {
-  //Checks negative number w/ no positives
-  int allZRight = ! (x & 0x7FFFFFFF);
-  return ((x >> 31) & 1) & allZRight;
+  return !(((~x + 1) ^ x) | !x);
+  
 }
 /* 
  * fitsBits - return 1 if x can be represented as an 
@@ -313,12 +316,11 @@ int isTmin(int x) {
  *   Rating: 2
  */
 int fitsBits(int x, int n) {
-  //Check that the signs match after shifting and that no remainder exists
-  int shiftedRes = x >> (n + 0xFFFFFFFF);
-  int signsMatch = !(!(x & 0x80000000) ^ !(shiftedRes & 1));//True if signs match (can fit)
-  int noRemainderVar = (shiftedRes & 0xfffffffe);//Check remaining bits
-  int noRemainder = (!noRemainderVar | !(~noRemainderVar + 0xFFFFFFFF));//Only true for all 0 left or all F
-  return noRemainder & signsMatch;
+  int negOne = ~0;
+  int shiftedRes = (x >> (n + negOne));
+  int noRemainder = !shiftedRes | !(~shiftedRes);
+  int signMatch = !((shiftedRes & 1) ^ ((x >> 31) & 1));
+  return signMatch & noRemainder;
 }
 /* 
  * twosComp2SignMag - Convert from two's complement to sign-magnitude 
@@ -332,9 +334,10 @@ int fitsBits(int x, int n) {
 int twosComp2SignMag(int x) {
   //If positive, stays the same
   //else, invert sign, or with 0x80000000
+  int longerConstant = 0x80 << 24;
   int inverted = ~x + 1;
-  int isPositive = (!(x & 0x80000000)) << 31;
-  int negOutput = inverted | 0x80000000;
+  int isPositive = (!(x & longerConstant)) << 31;
+  int negOutput = inverted | longerConstant;
   return ((isPositive >> 31) & x) | (~(isPositive >> 31) & negOutput);
 }
 /* 
@@ -349,7 +352,10 @@ int twosComp2SignMag(int x) {
  *   Rating: 2
  */
 int floatIsEqual(unsigned uf, unsigned ug) {
-    return 2;
+    if (!(~(uf | 0x803FFFFF))) return 0; //if either nan
+    if (!(~(ug | 0x803FFFFF))) return 0;
+    if (!((uf & 0x7FFFFFFF)||(ug & 0x7FFFFFFF))) return 1; //if both either form of 0
+    return !(uf ^ ug);
 }
 /* 
  * floatNegate - Return bit-level equivalent of expression -f for
@@ -363,7 +369,9 @@ int floatIsEqual(unsigned uf, unsigned ug) {
  *   Rating: 2
  */
 unsigned floatNegate(unsigned uf) {
- return 2;
+  if (!(~(uf | 0x803FFFFF))) return uf;//if  NAN (all exponent 1)
+  if (uf & 0x80000000) return (uf & 0x7FFFFFFF);//If negative make sign 0
+  return (uf | 0x80000000);//If positive make sign 1
 }
 /* 
  * floatFloat2Int - Return bit-level equivalent of expression (int) f
@@ -378,5 +386,24 @@ unsigned floatNegate(unsigned uf) {
  *   Rating: 4
  */
 int floatFloat2Int(unsigned uf) {
+  int expDigits = (uf & 0x7F800000);
+  int expVal = -127 + (expDigits >> 23);
+  int accum = 1;
+  int frac = (uf & 0x007FFFFF) | 0x00800000; //add implied one
+  int maxFull = 0;
+  if (!(~(uf | 0x803FFFFF))) return 0x80000000;//if nan or inf return
+  if (!(uf & 0x7FFFFFFF)) return 0;
+  if ((expVal & 0x80000000)||!expDigits) return 0x00000000;//if negative exponent or denorm, return 0
+  //expVal = expVal + 1;
+  while(expVal){
+    if (frac & 0x00800000) accum = accum + 1;//put correct value from curr frac into accum 32-expVal'th bit
+    frac = frac << 1;//reduce exp, look at next bit for shifting
+    expVal = expVal + -1;//Reduce remaining expval
+    maxFull = accum & 0x80000000;
+    accum = accum << 1;
+    if(expVal && maxFull) return 0x80000000;//if overflow (loop will continue and last bit occupied) return
+  }
+  if (uf & 0x80000000) return ~accum + 1;//24
+  return accum;
   return 2;
 }
