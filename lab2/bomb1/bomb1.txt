@@ -349,9 +349,9 @@ Disassembly of section .text:
   400f6d:	b8 00 00 00 00       	mov    $0x0,%eax
   400f72:	e8 b9 fc ff ff       	callq  400c30 <__isoc99_sscanf@plt>
   400f77:	83 f8 01             	cmp    $0x1,%eax
-  400f7a:	7e 12                	jle    400f8e <phase_3+0x34>
+  400f7a:	7e 12                	jle    400f8e <phase_3+0x34>        first>1
   400f7c:	83 7c 24 0c 07       	cmpl   $0x7,0xc(%rsp)
-  400f81:	77 43                	ja     400fc6 <phase_3+0x6c>
+  400f81:	77 43                	ja     400fc6 <phase_3+0x6c>        uArg2<0x7
   400f83:	8b 44 24 0c          	mov    0xc(%rsp),%eax
   400f87:	ff 24 c5 c0 24 40 00 	jmpq   *0x4024c0(,%rax,8)
   400f8e:	e8 90 05 00 00       	callq  401523 <explode_bomb>
@@ -417,7 +417,7 @@ Disassembly of section .text:
   401041:	75 0c                	jne    40104f <phase_4+0x2e>
   401043:	8b 44 24 0c          	mov    0xc(%rsp),%eax
   401047:	83 e8 02             	sub    $0x2,%eax
-  40104a:	83 f8 02             	cmp    $0x2,%eax
+  40104a:	83 f8 02             	cmp    $0x2,%eax    2 <= arg1 <= 4
   40104d:	76 05                	jbe    401054 <phase_4+0x33>
   40104f:	e8 cf 04 00 00       	callq  401523 <explode_bomb>
   401054:	8b 74 24 0c          	mov    0xc(%rsp),%esi
@@ -461,8 +461,8 @@ Disassembly of section .text:
   4010bf:	41 54                	push   %r12
   4010c1:	55                   	push   %rbp
   4010c2:	53                   	push   %rbx
-  4010c3:	48 83 ec 58          	sub    $0x58,%rsp
-  4010c7:	48 8d 74 24 30       	lea    0x30(%rsp),%rsi
+  4010c3:	48 83 ec 58          	sub    $0x58,%rsp                     SP ROOM END
+  4010c7:	48 8d 74 24 30       	lea    0x30(%rsp),%rsi                
   4010cc:	e8 88 04 00 00       	callq  401559 <read_six_numbers>
   4010d1:	4c 8d 6c 24 30       	lea    0x30(%rsp),%r13
   4010d6:	4d 8d 7d 14          	lea    0x14(%r13),%r15
@@ -473,8 +473,8 @@ Disassembly of section .text:
   4010ea:	eb 30                	jmp    40111c <phase_6+0x63>
   4010ec:	48 83 c3 01          	add    $0x1,%rbx
   4010f0:	83 fb 05             	cmp    $0x5,%ebx
-  4010f3:	7f 10                	jg     401105 <phase_6+0x4c>
-  4010f5:	8b 44 9c 30          	mov    0x30(%rsp,%rbx,4),%eax
+  4010f3:	7f 10                	jg     401105 <phase_6+0x4c> if first five elements
+  4010f5:	8b 44 9c 30          	mov    0x30(%rsp,%rbx,4),%eax eax = curr input
   4010f9:	39 45 00             	cmp    %eax,0x0(%rbp)
   4010fc:	75 ee                	jne    4010ec <phase_6+0x33>
   4010fe:	e8 20 04 00 00       	callq  401523 <explode_bomb>
@@ -485,11 +485,11 @@ Disassembly of section .text:
   401110:	41 8b 04 24          	mov    (%r12),%eax
   401114:	83 e8 01             	sub    $0x1,%eax
   401117:	83 f8 05             	cmp    $0x5,%eax
-  40111a:	77 c9                	ja     4010e5 <phase_6+0x2c>
+  40111a:	77 c9                	ja     4010e5 <phase_6+0x2c>    0 < ARG1 < 5 else done
   40111c:	4d 39 fc             	cmp    %r15,%r12
-  40111f:	74 05                	je     401126 <phase_6+0x6d>
+  40111f:	74 05                	je     401126 <phase_6+0x6d>    If at end of list, go to lea below
   401121:	4c 89 f3             	mov    %r14,%rbx
-  401124:	eb cf                	jmp    4010f5 <phase_6+0x3c>
+  401124:	eb cf                	jmp    4010f5 <phase_6+0x3c> else go back to top
   401126:	49 8d 4d 18          	lea    0x18(%r13),%rcx
   40112a:	ba 07 00 00 00       	mov    $0x7,%edx
   40112f:	89 d0                	mov    %edx,%eax
@@ -497,7 +497,7 @@ Disassembly of section .text:
   401135:	41 89 45 00          	mov    %eax,0x0(%r13)
   401139:	49 83 c5 04          	add    $0x4,%r13
   40113d:	4c 39 e9             	cmp    %r13,%rcx
-  401140:	75 ed                	jne    40112f <phase_6+0x76>
+  401140:	75 ed                	jne    40112f <phase_6+0x76> //Inverts indicies
   401142:	be 00 00 00 00       	mov    $0x0,%esi
   401147:	8b 4c b4 30          	mov    0x30(%rsp,%rsi,4),%ecx
   40114b:	b8 01 00 00 00       	mov    $0x1,%eax
